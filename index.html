@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+	<meta name="generator" content="Hugo 0.115.4">
+    <meta charset="utf-8">
+<title>NRQL Bonanza</title>
+
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><link rel="stylesheet" href="/nrql-bonanza/reveal-js/dist/reset.css">
+<link rel="stylesheet" href="/nrql-bonanza/reveal-js/dist/reveal.css"><link rel="stylesheet" href="/nrql-bonanza/reveal-js/dist/theme/black.css" id="theme">
+<link rel="stylesheet" href="/nrql-bonanza/highlight-js/github.min.css"><style>
+    .reveal section.side-by-side h1 {
+      position: absolute;
+    }
+    .reveal section.side-by-side h1:first-of-type {
+      left: 25%;
+    }
+    .reveal section.side-by-side h1:nth-of-type(2) {
+      right: 25%;
+    }
+</style>
+  </head>
+  <body>
+    
+    <div class="reveal">
+      <div class="slides">
+  
+
+    <section><h1 id="nrql-bonanza">NRQL Bonanza</h1>
+<h1 id="heading">🎉</h1>
+<p>Get more our of your data with NRQL!</p>
+</section><section>
+<img src="https://che55er.io/img/me.png" width="300">
+<h3 id="carl-chesser">Carl Chesser</h3>
+<ul>
+<li>Sr. Principal Engieer @ Oracle (formerly Cerner)</li>
+<li>18 years in software development</li>
+<li>Used New Relic ~ 5 years</li>
+</ul>
+</section><section>
+<h1 id="about-this-talk">About this Talk</h1>
+<h2 id="exploring-nrql-">Exploring NRQL 🔍</h2>
+<ul>
+<li>Assume you know about the New Relic Query Langauge (NRQL)</li>
+<li>Short exploration around learning more about your data</li>
+<li>Includes some short exploration of NerdGraph (GraphQL)</li>
+</ul>
+</section><section>
+<h1 id="data-dictionary">Data Dictionary</h1>
+<p><a href="https://docs.newrelic.com/attribute-dictionary/">https://docs.newrelic.com/attribute-dictionary/</a></p>
+<p><img src="nr-data-dictionary.png" alt=""></p>
+</section><section>
+<p>Search for attributes across entities</p>
+<p><img src="nr-data-dictionary-search.png" alt=""></p>
+</section><section>
+<p>Data Dictionary in NerdGraph!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="nohighlight" data-noescape><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  docs {
+</span></span><span style="display:flex;"><span>    dataDictionary {
+</span></span><span style="display:flex;"><span>      events(names: <span style="color:#e6db74">&#34;Transaction&#34;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">attributes</span> {
+</span></span><span style="display:flex;"><span>          name
+</span></span><span style="display:flex;"><span>          definition(format: <span style="color:#a6e22e">PLAIN</span>)
+</span></span><span style="display:flex;"><span>          docsUrl
+</span></span><span style="display:flex;"><span>          events
+</span></span><span style="display:flex;"><span>          units {
+</span></span><span style="display:flex;"><span>            label
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        dataSources {
+</span></span><span style="display:flex;"><span>          name
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        definition(format: <span style="color:#a6e22e">PLAIN</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></section><section>
+<p>Helpful if you are wanting to extract more data into other formats for sharing&hellip;</p>
+<p><img src="nr-nerdgraph-data-dictionary.png" alt=""></p>
+</section><section>
+<h1 id="usage">Usage</h1>
+<p>Use NRQL to understand more about your data</p>
+<ul>
+<li>NrConsumption</li>
+<li>NrDailyUsage</li>
+<li><code>bytecountestimate</code> function on entities</li>
+</ul>
+</section><section>
+<h1 id="usage-1">Usage</h1>
+<p><code>bytecountestimate</code>, as the name implies, <a href="https://docs.newrelic.com/docs/accounts/accounts-billing/new-relic-one-pricing-billing/usage-queries-alerts/#byte-count-estimate">is an estimate</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="nohighlight" data-noescape><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> uniqueCount(apmAppName) 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> NrDailyUsage
+</span></span><span style="display:flex;"><span>FACET capture(apmAppName, r<span style="color:#e6db74">&#39;(?P&lt;appName&gt;.*)\[.*&#39;</span>) 
+</span></span><span style="display:flex;"><span>SINCE <span style="color:#ae81ff">30</span> days ago TIMESERIES <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">day</span>
+</span></span></code></pre></div></section><section>
+<h1 id="usage-2">Usage</h1>
+<p>NrDailyUsage to look at counts of application (what for spikes of growth)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="nohighlight" data-noescape><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> uniqueCount(apmAppName) 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> NrDailyUsage
+</span></span><span style="display:flex;"><span>FACET apmAppName
+</span></span><span style="display:flex;"><span>SINCE <span style="color:#ae81ff">30</span> days ago TIMESERIES <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">day</span>
+</span></span></code></pre></div></section><section>
+<h1 id="usage-3">Usage</h1>
+<p>NrDailyUsage to look at counts of application, by categorizing on a application name prefix.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="nohighlight" data-noescape><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> uniqueCount(apmAppName) 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> NrDailyUsage
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- Facet by application name prefix if you have (dash)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>FACET capture(apmAppName, r<span style="color:#e6db74">&#39;(?P&lt;appName&gt;.*)\-.*&#39;</span>) 
+</span></span><span style="display:flex;"><span>SINCE <span style="color:#ae81ff">30</span> days ago TIMESERIES <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">day</span>
+</span></span></code></pre></div></section><section>
+<h1 id="usage-4">Usage</h1>
+<p>Compare metrics ingestion over 4 weeks to previous 4 weeks.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="nohighlight" data-noescape><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">sum</span>(GigabytesIngested) <span style="color:#66d9ef">AS</span> avgGbIngestTimeseries
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> NrConsumption 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span> productLine <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;DataPlatform&#39;</span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">AND</span> usageMetric <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;MetricsBytes&#39;</span>
+</span></span><span style="display:flex;"><span>SINCE <span style="color:#ae81ff">4</span> weeks ago COMPARE <span style="color:#66d9ef">WITH</span> <span style="color:#ae81ff">4</span> weeks ago TIMESERIES <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">day</span> 
+</span></span></code></pre></div></section><section>
+</section>
+
+  
+
+
+</div>
+      
+
+    </div>
+<script type="text/javascript" src=/nrql-bonanza/reveal-hugo/object-assign.js></script>
+
+
+<script src="/nrql-bonanza/reveal-js/dist/reveal.js"></script>
+
+
+  <script type="text/javascript" src="/nrql-bonanza/reveal-js/plugin/markdown/markdown.js"></script>
+  
+  <script type="text/javascript" src="/nrql-bonanza/reveal-js/plugin/highlight/highlight.js"></script>
+  
+  <script type="text/javascript" src="/nrql-bonanza/reveal-js/plugin/zoom/zoom.js"></script>
+  
+  <script type="text/javascript" src="/nrql-bonanza/reveal-js/plugin/notes/notes.js"></script>
+  
+<script type="text/javascript">
+  
+  
+  function camelize(map) {
+    if (map) {
+      Object.keys(map).forEach(function(k) {
+        newK = k.replace(/(\_\w)/g, function(m) { return m[1].toUpperCase() });
+        if (newK != k) {
+          map[newK] = map[k];
+          delete map[k];
+        }
+      });
+    }
+    return map;
+  }
+
+  var revealHugoDefaults = { center: true, controls: true, history: true, progress: true, transition: "slide" };
+  var revealHugoSiteParams = {"highlight_theme":"github"};
+  var revealHugoPageParams = {};
+
+  var revealHugoPlugins = {
+    
+    plugins: [RevealMarkdown,RevealHighlight,RevealZoom,RevealNotes]
+  };
+
+  
+  var options = Object.assign({},
+    camelize(revealHugoDefaults),
+    camelize(revealHugoSiteParams),
+    camelize(revealHugoPageParams),
+    camelize(revealHugoPlugins));
+
+  Reveal.initialize(options);
+</script>
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+
+
+
+
+    
+    
+  </body>
+</html>
