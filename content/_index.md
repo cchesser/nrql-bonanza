@@ -71,9 +71,15 @@ Data Dictionary in NerdGraph!
 
 ---
 
-Helpful if you are wanting to extract more data into other formats for sharing...
+Helpful if you are wanting to extract dictionary data into other sources for consumption...
 
 ![](nr-nerdgraph-data-dictionary.png)
+
+---
+
+What about entities that describe usage of New Relic?
+
+# 🤷‍♂️
 
 ---
 
@@ -81,28 +87,46 @@ Helpful if you are wanting to extract more data into other formats for sharing..
 
 Use NRQL to understand more about your data
 
-* NrConsumption
-* NrDailyUsage
+* `NrConsumption`
+* `NrDailyUsage` once-a-day tracking of usage by product line
 * `bytecountestimate` function on entities
 
 ---
 
 # Usage
 
-`bytecountestimate`, as the name implies, [is an estimate](https://docs.newrelic.com/docs/accounts/accounts-billing/new-relic-one-pricing-billing/usage-queries-alerts/#byte-count-estimate).
+[`NrConsumption`](https://docs.newrelic.com/attribute-dictionary/?event=NrConsumption) to look usage metrics and consuming account name.
 
-```sql{}
-SELECT uniqueCount(apmAppName) 
-FROM NrDailyUsage
-FACET capture(apmAppName, r'(?P<appName>.*)\[.*') 
-SINCE 30 days ago TIMESERIES 1 day
+_Helpful if you have a multiple account organization._
+
+```sql{1-4|5}
+SELECT sum(GigabytesIngested) 
+FROM NrConsumption
+WHERE productLine = 'DataPlatform'
+SINCE 3 days ago 
+FACET usageMetric, consumingAccountName
+TIMESERIES 1 hour
 ```
 
 ---
 
 # Usage
 
-NrDailyUsage to look at counts of application (what for spikes of growth)
+[`NrConsumption`](https://docs.newrelic.com/attribute-dictionary/?event=NrConsumption) to compare metrics ingestion over 4 weeks.
+
+```sql{}
+SELECT sum(GigabytesIngested) AS avgGbIngestTimeseries
+FROM NrConsumption 
+WHERE productLine = 'DataPlatform' 
+AND usageMetric = 'MetricsBytes'
+SINCE 4 weeks ago COMPARE WITH 4 weeks ago TIMESERIES 1 day 
+```
+
+---
+
+# Usage
+
+[`NrDailyUsage`](https://docs.newrelic.com/attribute-dictionary/?event=NrDailyUsage) to look at counts of application (what for spikes of growth)
 
 ```sql{}
 SELECT uniqueCount(apmAppName) 
@@ -115,9 +139,9 @@ SINCE 30 days ago TIMESERIES 1 day
 
 # Usage
 
-NrDailyUsage to look at counts of application, by categorizing on a application name prefix.
+`NrDailyUsage` to look at counts of application, by categorizing on an application name prefix.
 
-```sql{}
+```sql{1-2|3-4}
 SELECT uniqueCount(apmAppName) 
 FROM NrDailyUsage
 -- Facet by application name prefix if you have (dash)
@@ -127,16 +151,157 @@ SINCE 30 days ago TIMESERIES 1 day
 
 ---
 
-# Usage
+# Usage Estimation
 
-Compare metrics ingestion over 4 weeks to previous 4 weeks.
+`bytecountestimate`, as the name implies, [is an estimate](https://docs.newrelic.com/docs/accounts/accounts-billing/new-relic-one-pricing-billing/usage-queries-alerts/#byte-count-estimate).
+
+Evaluate metrics by source and metric name:
 
 ```sql{}
-SELECT sum(GigabytesIngested) AS avgGbIngestTimeseries
-FROM NrConsumption 
-WHERE productLine = 'DataPlatform' 
-AND usageMetric = 'MetricsBytes'
-SINCE 4 weeks ago COMPARE WITH 4 weeks ago TIMESERIES 1 day 
+SELECT bytecountestimate()/10e8 
+  AS 'GB Estimate'
+FROM Metric 
+SINCE 4 weeks ago
+FACET newrelic.source, 
+      metricName 
+LIMIT 2000
 ```
 
 ---
+
+# Usage Estimation
+
+Evaluate the rate of APM transaction and distributed trace data by application and
+event type (table) in a timeseries to look at spikes.
+
+```sql{3-6|7-8}
+SELECT rate(bytecountestimate()/10e8, 1 minute) 
+  AS 'GB per minute' 
+FROM Transaction, 
+     TransactionError, 
+     TransactionTrace, 
+     Span
+-- eventType() function allows you facet by entities
+FACET appName, eventType()
+TIMESERIES 1 day 
+SINCE 3 days ago 
+LIMIT 10
+```
+
+---
+
+# Usage
+
+Break down metrics by prefix name
+
+```sql{}
+SELECT count(newrelic.timeslice.value) 
+FROM Metric 
+WHERE appName LIKE 'foo%'
+-- Ignore internal NR supportability metrics
+AND prefix != 'Supportability'
+WITH METRIC_FORMAT '{prefix}/{metric_name}' 
+SINCE 1 hour ago LIMIT MAX FACET prefix TIMESERIES 
+```
+
+---
+
+# Usage
+
+Focus on metric names based on the prefix identified
+
+```sql{1-3|4-7}
+SELECT count(newrelic.timeslice.value) 
+FROM Metric 
+WHERE appName LIKE 'foo%'
+-- Focus in on metric_names with External prefix
+AND prefix = 'External'
+WITH METRIC_FORMAT '{prefix}/{metric_name}' 
+SINCE 1 hour ago LIMIT MAX FACET metric_name TIMESERIES 
+```
+
+---
+
+What about entities that are not in the dictionary?
+
+# 🤷‍♂️
+
+---
+
+# Beyond the Dictionary
+
+Use NRQL to understand more about your data
+
+* `ApplicationAgentContext` for agent deployment context
+* `NrdbQuery` for what queries are being used
+
+---
+
+# Applications Instrumented
+
+Understand your applications and agents versions that are deployed.
+
+```sql{}
+SELECT count(*)
+FROM ApplicationAgentContext
+-- Replace 'foo' appName qualification for the entity you are searching
+where appName LIKE 'foo%'
+FACET appName, entity.guid, agent.version
+SINCE 1 days ago
+```
+
+---
+
+# Shadow Table
+
+`NrdbQuery` helps track NRQL usage in your account.
+What if I need to inspect what fields people are using?
+Ex. deprecating one field for another ([7.5.0 agent upgrade](https://docs.newrelic.com/docs/release-notes/agent-release-notes/java-release-notes/java-agent-750/))...
+
+```
+SELECT count(*) 
+FROM NrdbQuery
+WHERE query 
+  RLIKE r'.*(\s+|\.)(http.responseCode|response.status|response.statusMessage).*' 
+AND query NOT LIKE '%NrdbQuery%'
+AND query RLIKE r'(?i).*FROM Transaction.*'
+FACET user, query 
+SINCE 90 days AGO LIMIT MAX
+```
+
+---
+
+# Shadow Table
+
+`NrdbQuery` to help capture metrics being used via NRQL...
+
+```
+SELECT count(*) FROM NrdbQuery
+-- Include metric name teams may be using in NRQL
+WHERE query RLIKE '.*MemoryPool.*'
+FACET user, query SINCE 7 days AGO
+```
+
+---
+
+Inspect across account with NRQL via GraphQL
+
+# 🚀
+
+```graphql{}
+{
+  actor {
+    account(id: 123) {
+      nrql(query: "SELECT count(*) FROM ApplicationAgentContext WHERE agent.language = 'java' AND agent.version RLIKE r'[8-9]\.\d+\.\d+' SINCE 1 WEEK AGO FACET entity.guid, appName LIMIT MAX") {
+        results
+      }
+    }
+  }
+} 
+```
+
+---
+
+## Thank you!
+
+[che55er.io](https://che55er.io)

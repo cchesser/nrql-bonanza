@@ -6,6 +6,9 @@ theme = ["github.com/dzello/reveal-hugo"]
 [params.reveal_hugo]
 highlight_theme = "github"
 
+[markup.highlight]
+codeFences = false
+
 [markup.goldmark.renderer]
 unsafe = true
 
@@ -13,4 +16,3 @@ unsafe = true
 baseName = "index"
 mediaType = "text/html"
 isHTML = true
-
