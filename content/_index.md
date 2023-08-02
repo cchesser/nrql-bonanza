@@ -6,7 +6,7 @@ outputs = ["Reveal"]
 # NRQL Bonanza 
 # 🎉
 
-Get more our of your data with NRQL!
+Get more out of your data with NRQL!
 
 ---
 
@@ -71,7 +71,7 @@ Data Dictionary in NerdGraph!
 
 ---
 
-Helpful if you are wanting to extract dictionary data into other sources for consumption...
+Helpful if you are wanting to extract the dictionary data into other sources for consumption...
 
 ![](nr-nerdgraph-data-dictionary.png)
 
@@ -228,6 +228,29 @@ What about entities that are not in the dictionary?
 
 ---
 
+# Discover
+
+Get a listing of all the event types through this NRQL command:
+
+```sql{}
+SHOW EVENT TYPES
+```
+
+---
+
+# Discover
+
+Curious about what all columns are on an entity? Use [`keyset()`](https://docs.newrelic.com/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/#keyset)!
+
+```sql{}
+-- Returns a JSON structure all of 
+-- the attributes for the NrUsage entity
+SELECT keyset()
+FROM NrUsage
+```
+
+---
+
 # Beyond the Dictionary
 
 Use NRQL to understand more about your data
@@ -244,7 +267,8 @@ Understand your applications and agents versions that are deployed.
 ```sql{}
 SELECT count(*)
 FROM ApplicationAgentContext
--- Replace 'foo' appName qualification for the entity you are searching
+-- Replace 'foo' appName qualification 
+-- for the entity you are searching
 where appName LIKE 'foo%'
 FACET appName, entity.guid, agent.version
 SINCE 1 days ago
