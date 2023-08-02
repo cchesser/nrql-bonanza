@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-	<meta name="generator" content="Hugo 0.116.0">
+	<meta name="generator" content="Hugo 0.116.1">
     <meta charset="utf-8">
 <title>NRQL Bonanza</title>
 
@@ -30,7 +30,7 @@
 
     <section><h1 id="nrql-bonanza">NRQL Bonanza</h1>
 <h1 id="heading">🎉</h1>
-<p>Get more our of your data with NRQL!</p>
+<p>Get more out of your data with NRQL!</p>
 </section><section>
 <img src="https://che55er.io/img/me.png" width="300">
 <h3 id="carl-chesser">Carl Chesser</h3>
@@ -79,7 +79,7 @@
 }
 </code></pre>
 </section><section>
-<p>Helpful if you are wanting to extract dictionary data into other sources for consumption&hellip;</p>
+<p>Helpful if you are wanting to extract the dictionary data into other sources for consumption&hellip;</p>
 <p><img src="nr-nerdgraph-data-dictionary.png" alt=""></p>
 </section><section>
 <p>What about entities that describe usage of New Relic?</p>
@@ -183,6 +183,19 @@ SINCE 1 hour ago LIMIT MAX FACET metric_name TIMESERIES
 <p>What about entities that are not in the dictionary?</p>
 <h1 id="heading-2">🤷‍♂️</h1>
 </section><section>
+<h1 id="discover">Discover</h1>
+<p>Get a listing of all the event types through this NRQL command:</p>
+<pre><code class="language-sql" data-line-numbers>SHOW EVENT TYPES
+</code></pre>
+</section><section>
+<h1 id="discover-1">Discover</h1>
+<p>Curious about what all columns are on an entity? Use <a href="https://docs.newrelic.com/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/#keyset"><code>keyset()</code></a>!</p>
+<pre><code class="language-sql" data-line-numbers>-- Returns a JSON structure all of 
+-- the attributes for the NrUsage entity
+SELECT keyset()
+FROM NrUsage
+</code></pre>
+</section><section>
 <h1 id="beyond-the-dictionary">Beyond the Dictionary</h1>
 <p>Use NRQL to understand more about your data</p>
 <ul>
@@ -194,7 +207,8 @@ SINCE 1 hour ago LIMIT MAX FACET metric_name TIMESERIES
 <p>Understand your applications and agents versions that are deployed.</p>
 <pre><code class="language-sql" data-line-numbers>SELECT count(*)
 FROM ApplicationAgentContext
--- Replace 'foo' appName qualification for the entity you are searching
+-- Replace 'foo' appName qualification 
+-- for the entity you are searching
 where appName LIKE 'foo%'
 FACET appName, entity.guid, agent.version
 SINCE 1 days ago
